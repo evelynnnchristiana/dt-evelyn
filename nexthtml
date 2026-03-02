@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Search Elite - Pink Edition</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #fb7185 0%, #db2777 100%);
+            --secondary: #9d174d;
+            --success: #ec4899;
+            --bg: #fdf2f8;
+            --card: #ffffff;
+            --text-dark: #831843;
+            --highlight: #fce7f3;
+            --accent: #f472b6;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            background-image: radial-gradient(#f9a8d4 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Layar Utama & Menu */
+        .container {
+            display: flex;
+            flex-direction: row;
+            gap: 40px;
+            background: var(--card);
+            padding: 40px;
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(219, 39, 119, 0.15);
+            max-width: 1100px;
+            width: 100%;
+            border: 4px solid #fbcfe8;
+            position: relative;
+            min-height: 500px;
+        }
+
+        #menu-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            text-align: center;
+        }
+
+        #game-screen {
+            display: none;
+            flex-direction: row;
+            gap: 40px;
+            width: 100%;
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.05em;
+        }
+
+        .subtitle {
+            color: var(--secondary);
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .theme-card {
+            background: #fff1f2;
+            border: 2px solid #fbcfe8;
+            padding: 25px;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-8px);
+            border-color: #f472b6;
+            background: #fce7f3;
+            box-shadow: 0 15px 20px -5px rgba(219, 39, 119, 0.2);
+        }
+
+        .theme-card span { font-size: 2.5rem; }
+        .theme-card b { font-size: 1.2rem; color: #be185d; }
+
+        .game-board-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(10, 46px);
+            gap: 8px;
+            background: #fff1f2;
+            padding: 15px;
+            border-radius: 22px;
+            user-select: none;
+            touch-action: none;
+            border: 2px solid #fce7f3;
+        }
+
+        .cell {
+            width: 46px;
+            height: 46px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #fbcfe8;
+            color: #db2777;
+        }
+
+        .cell.selected { 
+            background-color: #fdf2f8; 
+            color: #9d174d; 
+            border-color: #f472b6; 
+            transform: scale(1.1); 
+            z-index: 10; 
+            box-shadow: 0 0 15px rgba(244, 114, 182, 0.3);
+        }
+
+        .cell.found { 
+            background: var(--primary-gradient); 
+            color: white; 
+            border-color: #be185d; 
+            animation: pop 0.4s ease-out; 
+        }
+
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.25); } 100% { transform: scale(1); } }
+
+        .meta-panel {
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border-left: 3px dashed #fbcfe8;
+            padding-left: 40px;
+        }
+
+        .stat-card {
+            background: #fff1f2;
+            border-radius: 20px;
+            padding: 15px;
+            border: 2px solid #fce7f3;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+        .stat-label { color: #be185d; font-weight: 700; font-size: 0.8rem; }
+        .stat-value { font-weight: 800; color: #db2777; }
+
+        .word-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+        .word-item { 
+            padding: 10px 15px; 
+            background: #fff; 
+            border: 1px solid #fbcfe8; 
+            border-radius: 14px; 
+            font-weight: 700; 
+            font-size: 0.9rem; 
+            color: #db2777; 
+        }
+        .word-item.found { 
+            background-color: #fdf2f8; 
+            color: #f472b6; 
+            border-color: #f9a8d4; 
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.2);
+        }
+
+        .btn-action:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(219, 39, 119, 0.3); }
+
+        @media (max-width: 900px) {
+            .container { flex-direction: column; }
+            #game-screen { flex-direction: column; }
+            .meta-panel { width: 100%; border-left: none; border-top: 3px dashed #fbcfe8; padding: 20px 0 0 0; }
+            #grid { grid-template-columns: repeat(10, 36px); }
+            .cell { width: 36px; height: 36px; font-size: 1rem; }
+            .theme-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="menu-screen">
+        <h1>Word Search Elite</h1>
+        <p class="subtitle">Tema Pink Spesial: Pilih petualanganmu! ✨</p>
+        
+        <div class="theme-grid">
+            <div class="theme-card" onclick="startGame('tech')">
+                <span>🌸</span>
+                <b>Teknologi</b>
+            </div>
+            <div class="theme-card" onclick="startGame('animals')">
+                <span>🐰</span>
+                <b>Hewan</b>
+            </div>
+            <div class="theme-card" onclick="startGame('food')">
+                <span>🍓</span>
+                <b>Makanan</b>
+            </div>
+            <div class="theme-card" onclick="startGame('nature')">
+                <span>🌺</span>
+                <b>Alam</b>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-screen">
+        <div class="game-board-container">
+            <h1 id="active-title">Cari Kata</h1>
+            <div id="grid"></div>
+        </div>
+
+        <div class="meta-panel">
+            <div class="stat-card">
+                <div class="stat-item">
+                    <span class="stat-label">⏱️ WAKTU</span>
+                    <span id="timer" class="stat-value">00:00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">💖 PROGRESS</span>
+                    <span id="found-count" class="stat-value">0 / 6</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">✨ SKOR</span>
+                    <span id="score" class="stat-value">0</span>
+                </div>
+            </div>
+
+            <div class="word-list-container">
+                <h3 style="font-size: 0.75rem; text-transform: uppercase; color: #f472b6; font-weight: 800; margin-bottom: 15px;">Daftar Target</h3>
+                <ul class="word-list" id="word-list"></ul>
+            </div>
+
+            <button class="btn-action" onclick="backToMenu()" style="background: #fff1f2; color: #db2777; border: 1px solid #fbcfe8; margin-bottom: 5px;">Kembali</button>
+            <button class="btn-action" onclick="refreshBoard()">Acak Papan</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * Kumpulan kata berdasarkan tema yang dipilih pengguna
+     */
+    const THEMES = {
+        tech: { title: "🌸 Teknologi", words: ["PYTHON", "HTML", "REACT", "GEMINI", "CODING", "LOGIKA", "CSS", "ARRAY", "OBJECT", "EDITOR"] },
+        animals: { title: "🐰 Hewan", words: ["GAJAH", "KUCING", "JERAPAH", "HARIMAU", "SINGA", "KELINCI", "MONYET", "LUWAK", "ZIBRA", "PANDA"] },
+        food: { title: "🍓 Makanan", words: ["BURGER", "PIZZA", "DONAT", "PASTA", "NASI", "SOTO", "SATE", "KEBAB", "TACO", "RAMEN"] },
+        nature: { title: "🌺 Alam", words: ["GUNUNG", "PANTAI", "SUNGAI", "POHON", "BUNGA", "HUJAN", "AWAN", "HUTAN", "DANAU", "LANGIT"] }
+    };
+
+    const GRID_SIZE = 10;
+    let currentThemeKey = '';
+    let selectedWords = [];
+    let foundWords = [];
+    let grid = [];
+    let isDragging = false;
+    let currentSelection = [];
+    let startTime;
+    let timerInterval;
+    let score = 0;
+
+    /**
+     * Memulai game setelah memilih tema
+     */
+    function startGame(themeKey) {
+        currentThemeKey = themeKey;
+        document.getElementById('menu-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'flex';
+        document.getElementById('active-title').innerText = THEMES[themeKey].title.split(' ')[1];
+        refreshBoard();
+    }
+
+    /**
+     * Kembali ke menu pilihan tema
+     */
+    function backToMenu() {
+        clearInterval(timerInterval);
+        document.getElementById('menu-screen').style.display = 'flex';
+        document.getElementById('game-screen').style.display = 'none';
+    }
+
+    /**
+     * Membuat papan permainan baru
+     */
+    function refreshBoard() {
+        clearInterval(timerInterval);
+        const themePool = THEMES[currentThemeKey].words;
+        
+        document.getElementById('grid').innerHTML = '';
+        document.getElementById('word-list').innerHTML = '';
+        foundWords = [];
+        score = 0;
+        updateMeta();
+        
+        // Pilih 6 kata unik secara acak
+        selectedWords = [...themePool].sort(() => 0.5 - Math.random()).slice(0, 6);
+        grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(''));
+        
+        // Masukkan kata-kata ke dalam grid
+        selectedWords.forEach(word => placeWord(word));
+        
+        // Isi sisa kotak dengan huruf random
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                if (grid[r][c] === '') {
+                    grid[r][c] = chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+            }
+        }
+        
+        // Render sel ke HTML
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.textContent = grid[r][c];
+                cell.dataset.r = r;
+                cell.dataset.c = c;
+                
+                // Event listener untuk mouse dan touch
+                cell.onmousedown = (e) => startDrag(r, c, cell);
+                cell.onmouseenter = (e) => continueDrag(r, c, cell);
+                cell.ontouchstart = (e) => { e.preventDefault(); startDrag(r, c, cell); };
+                
+                document.getElementById('grid').appendChild(cell);
+            }
+        }
+
+        // Tampilkan daftar kata yang harus dicari
+        selectedWords.forEach(word => {
+            const li = document.createElement('li');
+            li.className = 'word-item';
+            li.id = 'word-' + word;
+            li.textContent = word;
+            document.getElementById('word-list').appendChild(li);
+        });
+
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimer, 1000);
+        
+        window.onmouseup = endDrag;
+        window.ontouchend = endDrag;
+    }
+
+    /**
+     * Menempatkan kata ke dalam koordinat grid tanpa tumpang tindih
+     */
+    function placeWord(word) {
+        let placed = false;
+        let attempts = 0;
+        while (!placed && attempts < 100) {
+            const directions = [[0,1], [1,0], [1,1]]; // Horizontal, Vertikal, Diagonal
+            const [dr, dc] = directions[Math.floor(Math.random() * directions.length)];
+            const row = Math.floor(Math.random() * (dr === 0 ? GRID_SIZE : GRID_SIZE - word.length));
+            const col = Math.floor(Math.random() * (dc === 0 ? GRID_SIZE : GRID_SIZE - word.length));
+            
+            let canPlace = true;
+            for (let i = 0; i < word.length; i++) {
+                const r = row + i * dr;
+                const c = col + i * dc;
+                if (grid[r][c] !== '' && grid[r][c] !== word[i]) {
+                    canPlace = false;
+                    break;
+                }
+            }
+            
+            if (canPlace) {
+                for (let i = 0; i < word.length; i++) {
+                    const r = row + i * dr;
+                    const c = col + i * dc;
+                    grid[r][c] = word[i];
+                }
+                placed = true;
+            }
+            attempts++;
+        }
+    }
+
+    // --- Logika Seleksi Kata ---
+
+    function startDrag(r, c, el) {
+        isDragging = true;
+        currentSelection = [{r, c, el}];
+        el.classList.add('selected');
+    }
+
+    function continueDrag(r, c, el) {
+        if (!isDragging) return;
+        // Cek jika sel sudah ada di seleksi agar tidak double
+        if (currentSelection.some(item => item.r === r && item.c === c)) return;
+        currentSelection.push({r, c, el});
+        el.classList.add('selected');
+    }
+
+    function endDrag() {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const wordString = currentSelection.map(item => item.el.textContent).join('');
+        const reversedString = wordString.split('').reverse().join('');
+        
+        let found = "";
+        if (selectedWords.includes(wordString)) found = wordString;
+        else if (selectedWords.includes(reversedString)) found = reversedString;
+
+        if (found && !foundWords.includes(found)) {
+            foundWords.push(found);
+            currentSelection.forEach(item => {
+                item.el.classList.remove('selected');
+                item.el.classList.add('found');
+            });
+            document.getElementById('word-' + found).classList.add('found');
+            score += found.length * 15;
+            updateMeta();
+            
+            // Cek kondisi menang
+            if (foundWords.length === selectedWords.length) {
+                clearInterval(timerInterval);
+                setTimeout(() => alert("💖 Cantik! Kamu berhasil menemukan semua kata dalam tema ini!"), 300);
+            }
+        } else {
+            // Jika salah, hapus highlight kuning
+            currentSelection.forEach(item => item.el.classList.remove('selected'));
+        }
+        currentSelection = [];
+    }
+
+    function updateTimer() {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        const s = String(elapsed % 60).padStart(2, '0');
+        document.getElementById('timer').textContent = `${m}:${s}`;
+    }
+
+    function updateMeta() {
+        document.getElementById('found-count').textContent = `${foundWords.length} / ${selectedWords.length}`;
+        document.getElementById('score').textContent = score;
+    }
+</script>
+
+</body>
+</html>
